@@ -1408,26 +1408,7 @@ module	sdax_s2mm #(
 		axi_wlast <= 1'b0;
 	else if (!M_WVALID || M_WREADY)
 	begin
-		if (r_inc)
-		begin
-			case(r_size)
-			SZ_BYTE: axi_wlast <= (&nxt_waddr[0 +: LCLMAXBURST_SUB]);
-			SZ_16B:  axi_wlast <= (&nxt_waddr[1 +: LCLMAXBURST_SUB]);
-			SZ_32B:  axi_wlast <= (&nxt_waddr[2 +: LCLMAXBURST_SUB]);
-			SZ_BUS:  axi_wlast <= (&nxt_waddr[AXILSB +: LCLMAXBURST]);
-			endcase
-		end else
-			axi_wlast <= &wfix_burst_count[LGMAX_FIXED_BURST-1:0];
-
-		if ((sr_valid || !OPT_LOWPOWER) && sr_last[0])
-			axi_wlast <= 1'b1;
-		if (r_initial_burst && r_inc && r_initial_beats == 0)
-			axi_wlast <= 1'b1;
-		// Verilator lint_off WIDTH
-		if (cmd_abort && beats_committed == 1 + phantom_w)
-			// Verilator lint_on  WIDTH
-			axi_wlast <= 1'b1;
-	end
+		axi_wlast <= (beats_committed == (phantom_aw ? (axi_awlen + 2) : 1));
 `ifdef	FORMAL
 	always @(*)
 	if (M_WVALID && beats_committed == (phantom_aw ? 1:0))
